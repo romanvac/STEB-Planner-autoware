@@ -49,10 +49,6 @@ STEBPlannerNode::STEBPlannerNode(const rclcpp::NodeOptions& options)
       "~/input/path", rclcpp::QoS{1},
       std::bind(&STEBPlannerNode::onPath, this, std::placeholders::_1));
 
-  drivable_area_sub_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
-    "~/input/drivable_area", rclcpp::QoS{1},
-    std::bind(&STEBPlannerNode::onDrivableArea, this, std::placeholders::_1));
-
   objects_sub_ = create_subscription<autoware_perception_msgs::msg::PredictedObjects>(
       "~/input/objects", rclcpp::QoS{10},
       std::bind(&STEBPlannerNode::onObjects, this, std::placeholders::_1));
@@ -251,21 +247,10 @@ void STEBPlannerNode::onObjects(const autoware_perception_msgs::msg::PredictedOb
 
 }
 
-void STEBPlannerNode::onDrivableArea(const nav_msgs::msg::OccupancyGrid::SharedPtr msg_ptr) {
-  drivable_area_ptr_ = msg_ptr;
-}
-
-
 void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr path_ptr_new)
 {
   const auto path_ptr = toAutoPath(*path_ptr_new);
   
-  if (!drivable_area_ptr_)
-    return;
-
-  path_ptr->drivable_area = *drivable_area_ptr_;
-
-
   if (path_ptr->points.empty() || path_ptr->drivable_area.data.empty() || !objects_ptr_)
   {
     RCLCPP_WARN_STREAM(get_logger(), "[ steb_planner ]: path or driveable area is empty. ");

@@ -88,7 +88,6 @@ private:
   // subscribers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<autoware_planning_msgs::msg::Path>::SharedPtr path_sub_;
-  rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr drivable_area_sub_;
   rclcpp::Subscription<autoware_perception_msgs::msg::PredictedObjects>::SharedPtr objects_sub_;
   // publishers
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
@@ -109,7 +108,6 @@ private:
   rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
 
   // data input
-  nav_msgs::msg::OccupancyGrid::SharedPtr drivable_area_ptr_;
   std::unique_ptr<geometry_msgs::msg::TwistStamped> current_twist_ptr_;
   std::unique_ptr<autoware_auto_perception_msgs::msg::PredictedObjects> objects_ptr_;
   std::vector<steb_planner::ObstaclePtr> dynamic_obst_vector_;
@@ -129,7 +127,6 @@ private:
 
   void onOdometry(const nav_msgs::msg::Odometry::SharedPtr);
   void onPath(const autoware_planning_msgs::msg::Path::SharedPtr);
-  void onDrivableArea(const nav_msgs::msg::OccupancyGrid::SharedPtr);
   void onObjects(const autoware_perception_msgs::msg::PredictedObjects::SharedPtr);
 
   void publishDebugMarker(const rclcpp::Time& time);

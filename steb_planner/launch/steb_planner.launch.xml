@@ -3,7 +3,6 @@
   <!-- ─── topic args ─────────────────────────────────────────────────── -->
   <arg name="input_path"         default="/planning/scenario_planning/lane_driving/behavior_planning/path"/>
   <arg name="input_objects"      default="/perception/object_recognition/objects"/>
-  <arg name="input_drivable_area" default="/planning/scenario_planning/lane_driving/behavior_planning/behavior_path_planner/drivable_area"/>
   <arg name="output_trajectory"  default="/planning/scenario_planning/trajectory"/>
 
   <arg name="use_sim_time"       default="true"/>
