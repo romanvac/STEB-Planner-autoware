@@ -205,6 +205,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW   
 };
 
-} // end namespace
+} // namespace steb_planner
 
 #endif

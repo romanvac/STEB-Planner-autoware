@@ -102,7 +102,7 @@ public:
    _theta = pose._theta;
  }
 
- ~PoseSE2() {}
+ ~PoseSE2() = default;
 
 
  // Access the 2D position part

@@ -1,0 +1,97 @@
+steb_planner_node:
+  ros__parameters:
+
+    # ── Vehicle ──────────────────────────────────────────────────────────
+    vehicle_param.width:               1.9
+    vehicle_param.length:              4.9
+    vehicle_param.height:              1.45
+    vehicle_param.front_suspension:    0.90
+    vehicle_param.rear_suspension:     1.10
+    vehicle_param.max_steering_angle:  0.70   # [rad]
+    vehicle_param.min_turning_radius:  5.0    # [m]
+    vehicle_param.wheel_base:          3.0
+    vehicle_param.rear_axle_2_center:  1.5
+    vehicle_param.max_vel_x:           10.0   # [m/s]
+    vehicle_param.max_vel_x_backwards: 0.2
+    vehicle_param.max_vel_theta:       0.5    # [rad/s]
+    vehicle_param.max_longitudinal_acc: 2.0
+    vehicle_param.max_lateral_acc:     2.0
+    vehicle_param.max_theta_acc:       0.5
+    vehicle_param.circle_radius:       1.45
+
+    # ── Trajectory ───────────────────────────────────────────────────────
+    trajectory.steb_autosize:                       true
+    trajectory.steb_autosize_fast_mode:             true
+    trajectory.auto_resize_resolution:              1.4
+    trajectory.auto_resize_resolution_hysteresis:   0.6
+    trajectory.min_samples:                         5
+    trajectory.max_samples:                         100
+    trajectory.max_global_plan_lookahead_dist:      50.0
+    trajectory.global_plan_velocity_set:            3.0
+    trajectory.current_velocity_for_debug:          0.0
+    trajectory.exact_arc_length:                    true
+    trajectory.force_reinit_new_goal_dist:          10.0
+    trajectory.force_reinit_new_goal_angular:       1.5707963  # pi/2
+    trajectory.free_goal_vel:                       false
+    trajectory.final_trajectory_bezier_smooth:      true
+
+    # ── Obstacles ────────────────────────────────────────────────────────
+    obstacles.max_static_obstacle_velocity:              0.2
+    obstacles.min_obstacle_dist:                         4.0
+    obstacles.min_obstacle_time:                         6.0
+    obstacles.inflation_dist:                            3.5
+    obstacles.include_dynamic_obstacles:                 false
+    obstacles.obstacle_poses_affected:                   25
+    obstacles.obstacle_association_force_inclusion_factor: 1.5
+    obstacles.dynamic_obstacle_inflation_dist:           4.0
+
+    # ── Collision-Free Corridor ──────────────────────────────────────────
+    collision_free_corridor.is_avoiding_unknown:    false
+    collision_free_corridor.is_avoiding_car:        true
+    collision_free_corridor.is_avoiding_truck:      true
+    collision_free_corridor.is_avoiding_bus:        true
+    collision_free_corridor.is_avoiding_bicycle:    true
+    collision_free_corridor.is_avoiding_motorbike:  true
+    collision_free_corridor.is_avoiding_pedestrian: true
+    collision_free_corridor.is_avoiding_animal:     false
+    collision_free_corridor.soft_clearance_from_road:           0.0
+    collision_free_corridor.extra_desired_clearance_from_road:  0.0
+    collision_free_corridor.soft_clearance_from_object:         1.0
+    collision_free_corridor.extra_desired_clearance_from_object: 0.0
+    collision_free_corridor.max_bound_search_width:             5.0
+    collision_free_corridor.bounds_search_step_widths:          [0.45, 0.15, 0.05]
+
+    # ── Optimization ─────────────────────────────────────────────────────
+    optim.no_inner_iterations:   15
+    optim.no_outer_iterations:   4
+    optim.optimization_activate: true
+    optim.optimization_verbose:  true
+    optim.penalty_epsilon:       0.05
+
+    optim.weight_vel_x_limit:                       1.0
+    optim.weight_vel_theta_limit:                   1.0
+    optim.weight_acc_x_limit:                       10.0
+    optim.weight_acc_theta_limit:                   10.0
+    optim.weight_acc_theta_minimize:                10.0
+    optim.weight_jerk_minimize:                     10.0
+    optim.weight_kinematics_nh:                     100.0
+    optim.weight_kinematics_turning_radius_limit:   1.0
+    optim.weight_time_minimize:                     0.001
+    optim.weight_time_ascend_limit:                 100.0
+    optim.weight_shortest_path:                     1.0
+    optim.weight_obstacle_free_limit:               2.0
+    optim.weight_obstacle_of_dynamic_inflation:     0.01
+    optim.weight_viapoint:                          0.001
+    optim.weight_via_area_base:                     10.0
+    optim.weight_via_area_middle:                   1.0
+    optim.weight_via_area_front:                    1.0
+    optim.weight_start_points_velocity:             0.0
+    optim.weight_start_points_direction:            0.0
+    optim.weight_start_points_interval_distance:    0.0
+    optim.weight_final_goal_distance:               0.1
+    optim.weight_final_goal_yaw:                    0.1
+    optim.weight_final_goal_time:                   1.1
+    optim.weight_adapt_factor:                      1.2
+    optim.obstacle_cost_exponent:                   1.0
+    optim.divergence_detection_enable:              true
+    optim.divergence_detection_max_chi_squared:     10

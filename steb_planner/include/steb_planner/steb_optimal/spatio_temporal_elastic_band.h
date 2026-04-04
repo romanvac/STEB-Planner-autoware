@@ -53,7 +53,7 @@ namespace steb_planner
 {
 
 //! Container of poses that represent the spatial part of the trajectory
-typedef std::vector<VertexST*> PositionSequence;
+using PositionSequence = std::vector<VertexST*>;
 
 class SpatioTemporalElasticBand
 {
@@ -151,18 +151,18 @@ public:
 
 
  // Find the closest point on the trajectory w.r.t. to a provided reference point.
- int findClosestTrajectoryPose(const Eigen::Ref<const Eigen::Vector2d>& ref_point, double* distance = NULL, int begin_idx=0) const;
+ int findClosestTrajectoryPose(const Eigen::Ref<const Eigen::Vector2d>& ref_point, double* distance = nullptr, int begin_idx=0) const;
 
  // Find the closest point on the trajectory w.r.t. to a provided reference line.
  int findClosestTrajectoryPose(const Eigen::Ref<const Eigen::Vector2d>& ref_line_start, 
                                const Eigen::Ref<const Eigen::Vector2d>& ref_line_end, 
-                               double* distance = NULL) const;
+                               double* distance = nullptr) const;
 
  // Find the closest point on the trajectory w.r.t. to a provided reference polygon.
- int findClosestTrajectoryPose(const Point2dContainer& vertices, double* distance = NULL) const;
+ int findClosestTrajectoryPose(const Point2dContainer& vertices, double* distance = nullptr) const;
 
  // Find the closest point on the trajectory w.r.t to a provided obstacle type
- int findClosestTrajectoryPose(const Obstacle& obstacle, double* distance = NULL) const;
+ int findClosestTrajectoryPose(const Obstacle& obstacle, double* distance = nullptr) const;
 
 
  bool findNearestTwoPose(boost::optional<const Eigen::Vector3d&> target_pose, 

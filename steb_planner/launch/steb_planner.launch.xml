@@ -1,0 +1,25 @@
+<launch>
+
+  <!-- ─── topic args ─────────────────────────────────────────────────── -->
+  <arg name="input_path"         default="/planning/scenario_planning/lane_driving/behavior_planning/path"/>
+  <arg name="input_objects"      default="/perception/object_recognition/objects"/>
+  <arg name="input_drivable_area" default="/planning/scenario_planning/lane_driving/behavior_planning/behavior_path_planner/drivable_area"/>
+  <arg name="output_trajectory"  default="/planning/scenario_planning/trajectory"/>
+
+  <arg name="use_sim_time"       default="true"/>
+  <arg name="config_file"        default="$(find-pkg-share steb_planner)/config/steb_planner.param.yaml"/>
+
+  <!-- ─── node ──────────────────────────────────────────────────────── -->
+  <node pkg="steb_planner" exec="steb_planner_node" name="steb_planner_node" output="screen">
+
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param from="$(var config_file)"/>
+
+    <remap from="~/input/path"          to="$(var input_path)"/>
+    <remap from="~/input/objects"       to="$(var input_objects)"/>
+    <remap from="~/input/drivable_area" to="$(var input_drivable_area)"/>
+    <remap from="~/output/path"         to="$(var output_trajectory)"/>
+
+  </node>
+
+</launch>

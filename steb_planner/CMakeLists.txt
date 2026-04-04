@@ -77,5 +77,6 @@ target_link_libraries(steb_planner_test  steb_planner)
 ament_auto_package(
   INSTALL_TO_SHARE
     launch
+    config
     rviz
 )

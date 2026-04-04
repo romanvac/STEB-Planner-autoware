@@ -31,6 +31,7 @@
 *********************************************************************/
 
 #include "steb_planner_node.h"
+#include "converter.hpp"
 
 STEBPlannerNode::STEBPlannerNode(const rclcpp::NodeOptions& options)
     : Node("steb_planner_node", options)
@@ -44,16 +45,20 @@ STEBPlannerNode::STEBPlannerNode(const rclcpp::NodeOptions& options)
       "/localization/kinematic_state", rclcpp::QoS{1},
       std::bind(&STEBPlannerNode::onOdometry, this, std::placeholders::_1));
 
-  path_sub_ = create_subscription<autoware_auto_planning_msgs::msg::Path>(
+  path_sub_ = create_subscription<autoware_planning_msgs::msg::Path>(
       "~/input/path", rclcpp::QoS{1},
       std::bind(&STEBPlannerNode::onPath, this, std::placeholders::_1));
 
-  objects_sub_ = create_subscription<autoware_auto_perception_msgs::msg::PredictedObjects>(
+  drivable_area_sub_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
+    "~/input/drivable_area", rclcpp::QoS{1},
+    std::bind(&STEBPlannerNode::onDrivableArea, this, std::placeholders::_1));
+
+  objects_sub_ = create_subscription<autoware_perception_msgs::msg::PredictedObjects>(
       "~/input/objects", rclcpp::QoS{10},
       std::bind(&STEBPlannerNode::onObjects, this, std::placeholders::_1));
 
   // publishers
-  traj_pub_ = create_publisher<autoware_auto_planning_msgs::msg::Trajectory>("~/output/path", 1);
+  traj_pub_ = create_publisher<autoware_planning_msgs::msg::Trajectory>("~/output/path", 1);
   debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("~/debug/markers", 1);
   debug_obstacle_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("~/debug/static_obstacle_markers", 1);
   debug_trajectory_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("~/debug/trajectory_markers", 1);
@@ -104,11 +109,12 @@ void STEBPlannerNode::onOdometry(const nav_msgs::msg::Odometry::SharedPtr msg)
   }
 }
 
-void STEBPlannerNode::onObjects(const autoware_auto_perception_msgs::msg::PredictedObjects::SharedPtr msg)
+void STEBPlannerNode::onObjects(const autoware_perception_msgs::msg::PredictedObjects::SharedPtr msg)
 {
   // std::cout << "------- get obstacle msg ------- "<<msg->objects.size()<< std::endl;
   std::lock_guard<std::mutex> l(obst_mutex_);
-  objects_ptr_ = std::make_unique<autoware_auto_perception_msgs::msg::PredictedObjects>(*msg);
+  const auto auto_objects = toAutoPredictedObjects(*msg);
+  objects_ptr_ = std::make_unique<autoware_auto_perception_msgs::msg::PredictedObjects>(auto_objects);
   
   // @hs: add dynamic obstacles
   dynamic_obst_vector_.clear();
@@ -245,8 +251,17 @@ void STEBPlannerNode::onObjects(const autoware_auto_perception_msgs::msg::Predic
 
 }
 
-void STEBPlannerNode::onPath(const autoware_auto_planning_msgs::msg::Path::SharedPtr path_ptr)
+void STEBPlannerNode::onDrivableArea(const nav_msgs::msg::OccupancyGrid::SharedPtr msg_ptr) {
+  drivable_area_ptr_ = msg_ptr;
+}
+
+
+void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr path_ptr_new)
 {
+  const auto path_ptr = toAutoPath(*path_ptr_new);
+  path_ptr->drivable_area = *drivable_area_ptr_;
+
+
   if (path_ptr->points.empty() || path_ptr->drivable_area.data.empty() || !objects_ptr_)
   {
     RCLCPP_WARN_STREAM(get_logger(), "[ steb_planner ]: path or driveable area is empty. ");
@@ -384,7 +399,7 @@ void STEBPlannerNode::onPath(const autoware_auto_planning_msgs::msg::Path::Share
     trajectory_pub.points.push_back(trajectory_point);
   }
 
-  traj_pub_->publish(trajectory_pub);
+  traj_pub_->publish(fromAutoTrajectory(trajectory_pub));
 
 
   // visualization the trajectory

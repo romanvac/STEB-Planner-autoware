@@ -50,6 +50,13 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <sensor_msgs/msg/image.hpp>
 
+// new msgs
+#include "autoware_planning_msgs/msg/path.hpp"
+#include "autoware_planning_msgs/msg/trajectory.hpp"
+#include "autoware_perception_msgs/msg/predicted_objects.hpp"
+
+
+
 // g2o custom edges and vertices for the STEB planner
 #include <steb_planner/g2o_types/edge_velocity.h>
 #include <steb_planner/g2o_types/edge_acceleration.h>
@@ -80,8 +87,9 @@ private:
 
   // subscribers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-  rclcpp::Subscription<autoware_auto_planning_msgs::msg::Path>::SharedPtr path_sub_;
-  rclcpp::Subscription<autoware_auto_perception_msgs::msg::PredictedObjects>::SharedPtr objects_sub_;
+  rclcpp::Subscription<autoware_planning_msgs::msg::Path>::SharedPtr path_sub_;
+  rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr drivable_area_sub_;
+  rclcpp::Subscription<autoware_perception_msgs::msg::PredictedObjects>::SharedPtr objects_sub_;
   // publishers
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_obstacle_pub_;
@@ -89,7 +97,7 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr debug_costmap_image_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr debug_costmap_origin_image_pub_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr debug_occ_map_pub_;
-  rclcpp::Publisher<autoware_auto_planning_msgs::msg::Trajectory>::SharedPtr traj_pub_;
+  rclcpp::Publisher<autoware_planning_msgs::msg::Trajectory>::SharedPtr traj_pub_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr exe_time_pub_;
   //id
   int debug_trajectory_pub_id_ = 0;
@@ -101,6 +109,7 @@ private:
   rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
 
   // data input
+  nav_msgs::msg::OccupancyGrid::SharedPtr drivable_area_ptr_;
   std::unique_ptr<geometry_msgs::msg::TwistStamped> current_twist_ptr_;
   std::unique_ptr<autoware_auto_perception_msgs::msg::PredictedObjects> objects_ptr_;
   std::vector<steb_planner::ObstaclePtr> dynamic_obst_vector_;
@@ -119,8 +128,9 @@ private:
   std::fstream ofs_;
 
   void onOdometry(const nav_msgs::msg::Odometry::SharedPtr);
-  void onPath(const autoware_auto_planning_msgs::msg::Path::SharedPtr);
-  void onObjects(const autoware_auto_perception_msgs::msg::PredictedObjects::SharedPtr);
+  void onPath(const autoware_planning_msgs::msg::Path::SharedPtr);
+  void onDrivableArea(const nav_msgs::msg::OccupancyGrid::SharedPtr);
+  void onObjects(const autoware_perception_msgs::msg::PredictedObjects::SharedPtr);
 
   void publishDebugMarker(const rclcpp::Time& time);
 

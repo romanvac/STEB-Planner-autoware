@@ -30,8 +30,8 @@
 #ifndef OPTIMAL_PLANNER_H_
 #define OPTIMAL_PLANNER_H_
 
-#include <math.h>
-#include <limits.h>
+#include <cmath>
+#include <climits>
 #include <map>
 #include <memory>
 #include <limits>
@@ -85,15 +85,15 @@
 namespace steb_planner
 {
 
-typedef std::vector< Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > Point2dContainer;
+using Point2dContainer = std::vector< Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> >;
 //! Typedef for a container storing via-points (x, y, theta, T)
-typedef std::vector< Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > TrajectoryPointsContainer;
+using TrajectoryPointsContainer = std::vector< Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> >;
 
 //! Typedef for the block solver utilized for optimization
-typedef g2o::BlockSolverX STEBBlockSolver;
+using STEBBlockSolver = g2o::BlockSolverX;
 
 //! Typedef for the linear solver utilized for optimization
-typedef g2o::LinearSolverCSparse<STEBBlockSolver::PoseMatrixType> STEBLinearSolver;
+using STEBLinearSolver = g2o::LinearSolverCSparse<STEBBlockSolver::PoseMatrixType>;
 
 
 
@@ -104,10 +104,10 @@ public:
   STEBPlanner();
 
   STEBPlanner(rclcpp::Node* node, const STEBConfig* cfg,
-              const nav_msgs::msg::Odometry* odometry = NULL, 
-              const steb_planner::ObstContainer* obstacles = NULL,
-              const TrajectoryPointsContainer* via_points = NULL,
-              const nav_msgs::msg::OccupancyGrid* = NULL);
+              const nav_msgs::msg::Odometry* odometry = nullptr, 
+              const steb_planner::ObstContainer* obstacles = nullptr,
+              const TrajectoryPointsContainer* via_points = nullptr,
+              const nav_msgs::msg::OccupancyGrid* = nullptr);
 
  ~STEBPlanner();
 
@@ -355,11 +355,11 @@ public:
 };
 
 //! Abbrev. for shared instances of the STEBOptimalPlanner
-typedef std::shared_ptr<STEBPlanner> STEBPlannerPtr;
+using STEBPlannerPtr = std::shared_ptr<STEBPlanner>;
 //! Abbrev. for shared const STEBOptimalPlanner pointers
-typedef std::shared_ptr<const STEBPlanner> STEBPlannerConstPtr;
+using STEBPlannerConstPtr = std::shared_ptr<const STEBPlanner>;
 //! Abbrev. for containers storing multiple teb optimal planners
-typedef std::vector< STEBPlannerPtr > STEBPlannerContainer;
+using STEBPlannerContainer = std::vector< STEBPlannerPtr >;
 
 } // namespace steb_planner
 

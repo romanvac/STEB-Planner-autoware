@@ -72,7 +72,7 @@ public:
     _position = position;
   }
 
-  ~PoseST() {}
+  ~PoseST() = default;
   
   
   Eigen::Vector2d& position()

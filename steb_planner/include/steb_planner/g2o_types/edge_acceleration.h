@@ -54,7 +54,7 @@ public:
     this->resize(4);
   }
 
-  void computeError()
+  void computeError() override
   {
     STEB_ASSERT_MSG(steb_cfg_, "You must call setTebConfig on EdgeAcceleration()");
     const auto* pose1 = dynamic_cast<const VertexST*>(_vertices[0]);
