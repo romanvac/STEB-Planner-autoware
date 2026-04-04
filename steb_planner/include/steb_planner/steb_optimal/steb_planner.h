@@ -60,7 +60,7 @@
 #include <tf2/transform_datatypes.h>
 #include <tf2/time.h>
 #include <tf2_ros/buffer_interface.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 // g2o custom edges and vertices for the TEB planner
 #include "steb_planner/g2o_types/edge_velocity.h"

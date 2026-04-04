@@ -18,6 +18,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(SUITESPARSE REQUIRED)
 find_package(G2O REQUIRED)
+find_package(glog REQUIRED)
 find_package(Boost REQUIRED)
 
 # Eigen3 FindScript Backward compatibility (ubuntu saucy)
@@ -33,7 +34,7 @@ elseif (EXISTS "FindEigen.cmake")
 endif (EXISTS "FindEigen3.cmake")
 
 set(EXTERNAL_INCLUDE_DIRS ${Eigen_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${G2O_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
-set(EXTERNAL_LIBS ${Boost_LIBRARIES} ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES} ${OpenCV_LIBRARIES})
+set(EXTERNAL_LIBS ${Boost_LIBRARIES} ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES} ${OpenCV_LIBRARIES} glog::glog)
 
 ###########
 ## Build ##
