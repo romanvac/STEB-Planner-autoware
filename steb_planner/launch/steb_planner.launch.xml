@@ -16,7 +16,6 @@
 
     <remap from="~/input/path"          to="$(var input_path)"/>
     <remap from="~/input/objects"       to="$(var input_objects)"/>
-    <remap from="~/input/drivable_area" to="$(var input_drivable_area)"/>
     <remap from="~/output/path"         to="$(var output_trajectory)"/>
 
   </node>
