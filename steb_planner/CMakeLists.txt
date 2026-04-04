@@ -46,7 +46,7 @@ include_directories(
 )
 
 ament_auto_add_library(steb_planner SHARED
-  src/steb_planner_node.cpp
+  # src/steb_planner_node.cpp
   src/steb_planner/steb_optimal/steb_config.cpp
   src/steb_planner/steb_optimal/saptio_temporal_elastic_band.cpp
   src/steb_planner/steb_optimal/steb_planner.cpp
@@ -65,10 +65,15 @@ target_link_libraries(steb_planner
         ${EXTERNAL_LIBS}
 )
 
-rclcpp_components_register_node(steb_planner
-  PLUGIN "STEBPlanner"
-  EXECUTABLE steb_planner_node
-)
+# rclcpp_components_register_node(steb_planner
+#   PLUGIN "STEBPlanner"
+#   EXECUTABLE steb_planner_node
+# )
+
+ament_auto_add_executable(steb_planner_node src/steb_planner_node.cpp)
+add_dependencies(steb_planner_node steb_planner)
+target_link_libraries(steb_planner_node steb_planner)
+
 
 ament_auto_add_executable(steb_planner_test src/steb_planner_node.cpp)
 add_dependencies(steb_planner_test steb_planner)

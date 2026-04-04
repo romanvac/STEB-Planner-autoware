@@ -259,6 +259,10 @@ void STEBPlannerNode::onDrivableArea(const nav_msgs::msg::OccupancyGrid::SharedP
 void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr path_ptr_new)
 {
   const auto path_ptr = toAutoPath(*path_ptr_new);
+  
+  if (!drivable_area_ptr_)
+    return;
+
   path_ptr->drivable_area = *drivable_area_ptr_;
 
 
