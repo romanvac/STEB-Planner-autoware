@@ -135,9 +135,12 @@ public:
   {
     // NOTE: implement transformation without defining yaw variable
     //       but directly sin/cos of yaw for fast calculation
-    const auto & q = origin.orientation;
-    const double cos_yaw = 1 - 2 * q.z * q.z;
-    const double sin_yaw = 2 * q.w * q.z;
+    // const auto & q = origin.orientation;
+    // const double cos_yaw = 1 - 2 * q.z * q.z;
+    // const double sin_yaw = 2 * q.w * q.z;
+    const double yaw = tf2::getYaw(origin.orientation);
+    const double cos_yaw = std::cos(yaw);
+    const double sin_yaw = std::sin(yaw);
 
     geometry_msgs::msg::Point relative_p;
     const double tmp_x = point.x - origin.position.x;
