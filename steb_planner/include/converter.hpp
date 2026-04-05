@@ -18,7 +18,7 @@
 
 // ─── Path ────────────────────────────────────────────────────────────────────
 nav_msgs::msg::OccupancyGrid boundsToOccupancyGrid(
-  const autoware_planning_msgs::msg::Path & new_path, double resolution = 0.2)
+  const autoware_planning_msgs::msg::Path & new_path, double resolution = 0.05)
 {
   const auto & left_bound = new_path.left_bound;
   const auto & right_bound = new_path.right_bound;

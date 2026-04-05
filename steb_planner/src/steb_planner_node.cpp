@@ -32,6 +32,7 @@
 
 #include "steb_planner_node.h"
 #include "converter.hpp"
+#include <unistd.h>
 
 STEBPlannerNode::STEBPlannerNode(const rclcpp::NodeOptions& options)
     : Node("steb_planner_node", options)
@@ -249,32 +250,78 @@ void STEBPlannerNode::onObjects(const autoware_perception_msgs::msg::PredictedOb
 
 void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr path_ptr_new)
 {
-  const auto path_ptr = toAutoPath(*path_ptr_new);
-  
-  if (path_ptr->points.empty() || path_ptr->drivable_area.data.empty() || !objects_ptr_)
-  {
-    RCLCPP_WARN_STREAM(get_logger(), "[ steb_planner ]: path or driveable area is empty. ");
+  if (path_ptr_new->points.empty() || !objects_ptr_) {
+    RCLCPP_WARN_STREAM(get_logger(), "[ steb_planner ]: path is empty.");
     return;
   }
-  // get ego to map transform
+
+  // ── 1. Получаем трансформ map→base_link ПЕРВЫМ делом ──────────────────
   geometry_msgs::msg::TransformStamped msg_tf_ego_to_path_frame{};
   try {
     msg_tf_ego_to_path_frame = tf_buffer_ptr_->lookupTransform(
-        "base_link", path_ptr->header.frame_id, path_ptr->header.stamp,
+        "base_link", path_ptr_new->header.frame_id,
+        path_ptr_new->header.stamp,
         rclcpp::Duration::from_seconds(0.5));
   } catch (tf2::TransformException & ex) {
-    RCLCPP_WARN_STREAM(get_logger(), "Failed to look up transform from " << "base_link" << " to "
-                                                                         << path_ptr->header.frame_id);
-    return ;
+    RCLCPP_WARN_STREAM(get_logger(), "Failed to look up transform: " << ex.what());
+    return;
   }
   tf2::Transform tf_ego_to_path_frame;
   tf2::fromMsg(msg_tf_ego_to_path_frame.transform, tf_ego_to_path_frame);
 
-  // @hs add via points
-  // transform path to ego frame; x,y,yaw,v
+  // ── 2. Трансформируем left_bound и right_bound в base_link ─────────────
+  //       ПЕРЕД построением OccupancyGrid через boundsToOccupancyGrid()
+  autoware_planning_msgs::msg::Path path_for_grid = *path_ptr_new;
+  for (auto & p : path_for_grid.left_bound) {
+    tf2::Vector3 v_map(p.x, p.y, 0.0);
+    tf2::Vector3 v_ego = tf_ego_to_path_frame * v_map;
+    p.x = v_ego.x();
+    p.y = v_ego.y();
+    p.z = 0.0;
+  }
+  for (auto & p : path_for_grid.right_bound) {
+    tf2::Vector3 v_map(p.x, p.y, 0.0);
+    tf2::Vector3 v_ego = tf_ego_to_path_frame * v_map;
+    p.x = v_ego.x();
+    p.y = v_ego.y();
+    p.z = 0.0;
+  }
+
+  // ── 3. Строим path_ptr: bounds уже в base_link → grid тоже в base_link ─
+  const auto path_ptr = toAutoPath(path_for_grid);
+  // points берём из оригинального path (в map frame, как и раньше)
+  path_ptr->points.clear();
+  for (const auto & pt : path_ptr_new->points) {
+    autoware_auto_planning_msgs::msg::PathPoint auto_pt;
+    auto_pt.pose = pt.pose;
+    auto_pt.longitudinal_velocity_mps = pt.longitudinal_velocity_mps;
+    auto_pt.lateral_velocity_mps = pt.lateral_velocity_mps;
+    auto_pt.heading_rate_rps = pt.heading_rate_rps;
+    path_ptr->points.push_back(auto_pt);
+  }
+  path_ptr->header = path_ptr_new->header;
+
+  if (path_ptr->points.empty() || path_ptr->drivable_area.data.empty()) {
+    RCLCPP_WARN_STREAM(get_logger(), "[ steb_planner ]: drivable area is empty.");
+    return;
+  }
+
+  // ── 4. occ_map_ — origin уже в base_link координатах (yaw = 0) ─────────
+  occ_map_ = path_ptr->drivable_area;
+  occ_map_.header.frame_id = "base_link";
+  // НЕ трансформируем origin вручную — он уже правильный!
+
+  // ── 5. DEBUG лог ────────────────────────────────────────────────────────
+  RCLCPP_INFO(get_logger(),
+      "[COORD] occ_map origin in base_link: (%.3f, %.3f), yaw=%.4f",
+      occ_map_.info.origin.position.x,
+      occ_map_.info.origin.position.y,
+      tf2::getYaw(occ_map_.info.origin.orientation));
+
+  // ── 6. Строим via_points_ в base_link (было в оригинале) ───────────────
   steb_planner::TrajectoryPointsContainer path_points_in_ego_frame;
   tf2::Transform tf_path_pose = tf2::Transform::getIdentity();
-  for (auto& path_point : path_ptr->points)
+  for (auto & path_point : path_ptr->points)
   {
     tf2::fromMsg(path_point.pose, tf_path_pose);
     tf2::Transform tf_path_pose_in_ego = tf_ego_to_path_frame * tf_path_pose;
@@ -286,12 +333,12 @@ void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr 
   }
 
   // find the nearest index
-  Eigen::Vector4d current_pose = {0,0,0,0};
+  Eigen::Vector4d current_pose = {0, 0, 0, 0};
   int nearest_index = steb_planner::findNearestIndex(path_points_in_ego_frame, current_pose);
-  if (nearest_index == -1 )
-    return ;
+  if (nearest_index == -1)
+    return;
 
-  // Remove points that have already passed by; And give time
+  // Remove points that have already passed; give time stamps
   double forward_distance = 0.0;
   double forward_time = 0.0;
   via_points_.clear();
@@ -300,14 +347,12 @@ void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr 
   for (auto path_point = path_points_in_ego_frame.begin() + nearest_index + 1;
        path_point != path_points_in_ego_frame.end(); ++path_point)
   {
-
     double delta_distance = getInterPosesDistance2D(*path_point, last_pose);
     forward_distance += delta_distance;
-    // std::cout << "-------- distance: " << forward_distance << ",  "<< delta_distance <<std::endl;
     if (forward_distance > steb_config_.trajectory.max_global_plan_lookahead_dist)
-      break ;
-    // set the speed of reference trajectory for testing
-    double speed_set = std::max<double>(std::min<double>(path_point->w(), steb_config_.trajectory.global_plan_velocity_set), 0.5);
+      break;
+    double speed_set = std::max<double>(
+        std::min<double>(path_point->w(), steb_config_.trajectory.global_plan_velocity_set), 0.5);
     double delta_time = delta_distance / speed_set;
     forward_time += delta_time;
     Eigen::Vector4d p_w = {path_point->x(),
@@ -318,21 +363,7 @@ void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr 
     last_pose = *path_point;
   }
 
-  std::cout << ">>>>> via_points size : " << via_points_.size() <<std::endl;
-
-
-  // cost map process
-  occ_map_ = path_ptr->drivable_area;
-
-  tf2::Transform tf_map_to_map_origin;
-  tf2::fromMsg(occ_map_.info.origin, tf_map_to_map_origin);
-  tf2::Transform tf_ego_to_map_origin = tf_ego_to_path_frame * tf_map_to_map_origin;
-
-  occ_map_.header.frame_id = "base_link";
-  occ_map_.info.origin.position.x = tf_ego_to_map_origin.getOrigin().x();
-  occ_map_.info.origin.position.y = tf_ego_to_map_origin.getOrigin().y();
-  occ_map_.info.origin.position.z = tf_ego_to_map_origin.getOrigin().z();
-  occ_map_.info.origin.orientation = tf2::toMsg(tf_ego_to_map_origin.getRotation());
+  std::cout << ">>>>> via_points size : " << via_points_.size() << std::endl;
 
 
   // run the steb
@@ -379,7 +410,7 @@ void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr 
     autoware_auto_planning_msgs::msg::TrajectoryPoint trajectory_point;
     trajectory_point.pose.position.x = optimized_point_in_path_frame.getOrigin().x();
     trajectory_point.pose.position.y = optimized_point_in_path_frame.getOrigin().y();
-    trajectory_point.pose.position.z = 0.0;
+    trajectory_point.pose.position.z = path_ptr->points.front().pose.position.z;
 
     trajectory_point.pose.orientation = tf2::toMsg(optimized_point_in_path_frame.getRotation());
     trajectory_point.longitudinal_velocity_mps =
