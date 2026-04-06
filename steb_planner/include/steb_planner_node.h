@@ -2,85 +2,84 @@
 // Created by hs on 24-3-13.
 //
 /*********************************************************************
-*
-* Software License Agreement (MIT License)
-*
-* Copyright (c) 2024, HeShan.
-* All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-* Author: HeShan
-*********************************************************************/
-
-#include <iostream>
-#include <filesystem>
-#include <fstream>
-#include <cv_bridge/cv_bridge.h>
+ *
+ * Software License Agreement (MIT License)
+ *
+ * Copyright (c) 2024, HeShan.
+ * All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Author: HeShan
+ *********************************************************************/
 
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/float32.hpp>
-#include "nav_msgs/msg/odometry.hpp"
-#include "geometry_msgs/msg/twist.hpp"
-#include "geometry_msgs/msg/twist_stamped.hpp"
-#include "autoware_auto_planning_msgs/msg/path.hpp"
+
 #include "autoware_auto_perception_msgs/msg/predicted_object.hpp"
 #include "autoware_auto_perception_msgs/msg/predicted_objects.hpp"
+#include "autoware_auto_planning_msgs/msg/path.hpp"
 #include "autoware_auto_planning_msgs/msg/trajectory.hpp"
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
+#include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include <sensor_msgs/msg/image.hpp>
+#include <std_msgs/msg/float32.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
-#include <sensor_msgs/msg/image.hpp>
+
+#include <cv_bridge/cv_bridge.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 // new msgs
+#include "autoware_perception_msgs/msg/predicted_objects.hpp"
 #include "autoware_planning_msgs/msg/path.hpp"
 #include "autoware_planning_msgs/msg/trajectory.hpp"
-#include "autoware_perception_msgs/msg/predicted_objects.hpp"
-
-
 
 // g2o custom edges and vertices for the STEB planner
-#include <steb_planner/g2o_types/edge_velocity.h>
-#include <steb_planner/g2o_types/edge_acceleration.h>
-#include <steb_planner/g2o_types/edge_kinematics.h>
-#include <steb_planner/g2o_types/edge_time_optimal.h>
-#include <steb_planner/g2o_types/edge_shortest_path.h>
-#include <steb_planner/g2o_types/edge_obstacle.h>
-#include <steb_planner/g2o_types/edge_via_point.h>
-
-#include "steb_planner/steb_optimal/steb_config.h"
 #include "steb_planner/steb_obstacle/dynamic_obstacles.h"
 #include "steb_planner/steb_optimal/spatio_temporal_elastic_band.h"
+#include "steb_planner/steb_optimal/steb_config.h"
 #include "steb_planner/steb_optimal/steb_planner.h"
 #include "steb_planner/tic_toc.h"
 
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
 
+#include <steb_planner/g2o_types/edge_acceleration.h>
+#include <steb_planner/g2o_types/edge_kinematics.h>
+#include <steb_planner/g2o_types/edge_obstacle.h>
+#include <steb_planner/g2o_types/edge_shortest_path.h>
+#include <steb_planner/g2o_types/edge_time_optimal.h>
+#include <steb_planner/g2o_types/edge_velocity.h>
+#include <steb_planner/g2o_types/edge_via_point.h>
+
 class STEBPlannerNode : public rclcpp::Node
 {
 public:
-  explicit STEBPlannerNode(const rclcpp::NodeOptions& options);
+  explicit STEBPlannerNode(const rclcpp::NodeOptions & options);
 
 private:
-
   // ros tf
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_ptr_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
@@ -98,7 +97,7 @@ private:
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr debug_occ_map_pub_;
   rclcpp::Publisher<autoware_planning_msgs::msg::Trajectory>::SharedPtr traj_pub_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr exe_time_pub_;
-  //id
+  // id
   int debug_trajectory_pub_id_ = 0;
 
   // Config
@@ -129,20 +128,19 @@ private:
   void onPath(const autoware_planning_msgs::msg::Path::SharedPtr);
   void onObjects(const autoware_perception_msgs::msg::PredictedObjects::SharedPtr);
 
-  void publishDebugMarker(const rclcpp::Time& time);
-
+  void publishDebugMarker(const rclcpp::Time & time);
 
   inline std::string getTime()
   {
     time_t timep;
-    time (&timep);
+    time(&timep);
     char tmp[64];
-    strftime(tmp, sizeof(tmp), "%Y-%m-%d_%H-%M-%S",localtime(&timep) );
+    strftime(tmp, sizeof(tmp), "%Y-%m-%d_%H-%M-%S", localtime(&timep));
     return tmp;
   }
 
   inline geometry_msgs::msg::Quaternion createQuaternionFromRPY(
-      const double roll, const double pitch, const double yaw)
+    const double roll, const double pitch, const double yaw)
   {
     tf2::Quaternion q;
     q.setRPY(roll, pitch, yaw);
@@ -156,7 +154,8 @@ private:
     return tf2::toMsg(q);
   }
 
-  static inline double getInterPosesDistance2D(const geometry_msgs::msg::Pose & pose_1, const geometry_msgs::msg::Pose & pose_2)
+  static inline double getInterPosesDistance2D(
+    const geometry_msgs::msg::Pose & pose_1, const geometry_msgs::msg::Pose & pose_2)
   {
     double delta_x = pose_2.position.x - pose_1.position.x;
     double delta_y = pose_2.position.y - pose_1.position.y;
@@ -164,7 +163,8 @@ private:
     return std::sqrt(delta_x * delta_x + delta_y * delta_y);
   }
 
-  static inline double getInterPosesDistance2D(const Eigen::Vector4d & pose_st1, const Eigen::Vector4d & pose_st2)
+  static inline double getInterPosesDistance2D(
+    const Eigen::Vector4d & pose_st1, const Eigen::Vector4d & pose_st2)
   {
     double delta_x = pose_st2.x() - pose_st1.x();
     double delta_y = pose_st2.y() - pose_st1.y();
@@ -173,7 +173,7 @@ private:
   }
 
   // get the bezier points
-  inline Eigen::Vector3d bezierPoint(const std::vector<Eigen::Vector3d>& controlPoints, double t)
+  inline Eigen::Vector3d bezierPoint(const std::vector<Eigen::Vector3d> & controlPoints, double t)
   {
     int n = controlPoints.size() - 1;
     Eigen::Vector3d point = {0, 0, 0};
@@ -190,7 +190,9 @@ private:
   }
 
   // bezier interpolator
-  inline std::vector<Eigen::Vector3d> generateBezierCurve(const std::vector<Eigen::Vector3d>& controlPoints, int numPoints) {
+  inline std::vector<Eigen::Vector3d> generateBezierCurve(
+    const std::vector<Eigen::Vector3d> & controlPoints, int numPoints)
+  {
     std::vector<Eigen::Vector3d> curvePoints;
 
     for (int i = 0; i <= numPoints; ++i) {
@@ -201,4 +203,3 @@ private:
     return curvePoints;
   }
 };
-

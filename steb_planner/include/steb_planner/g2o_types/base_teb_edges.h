@@ -32,7 +32,7 @@
  *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Notes:
  * The following class is derived from a class defined by the
  * g2o-framework. g2o is licensed under the terms of the BSD License.
@@ -44,11 +44,11 @@
 #ifndef _BASE_TEB_EDGES_H_
 #define _BASE_TEB_EDGES_H_
 
-#include <g2o/core/base_binary_edge.h>
-#include <g2o/core/base_unary_edge.h>
-#include <g2o/core/base_multi_edge.h>
-
 #include "steb_planner/steb_optimal/steb_config.h"
+
+#include <g2o/core/base_binary_edge.h>
+#include <g2o/core/base_multi_edge.h>
+#include <g2o/core/base_unary_edge.h>
 #define UNUSED(x) (void)(x)
 
 namespace steb_planner
@@ -59,152 +59,123 @@ template <int D, typename E, typename VertexXi>
 class BaseTebUnaryEdge : public g2o::BaseUnaryEdge<D, E, VertexXi>
 {
 public:
-            
   using typename g2o::BaseUnaryEdge<D, E, VertexXi>::ErrorVector;
   using g2o::BaseUnaryEdge<D, E, VertexXi>::computeError;
-    
-  // Compute and return error / cost value. 
-  ErrorVector& getError()
+
+  // Compute and return error / cost value.
+  ErrorVector & getError()
   {
     computeError();
     return _error;
   }
 
   // Assign the STEBConfig class for parameters.
-  void setSTEBConfig(const STEBConfig& steb_cfg)
-  {
-    steb_cfg_ = &steb_cfg;
-  }
+  void setSTEBConfig(const STEBConfig & steb_cfg) { steb_cfg_ = &steb_cfg; }
 
   // Read values from input stream
-  virtual bool read(std::istream& is)
+  virtual bool read(std::istream & is)
   {
     UNUSED(is);
     return true;
   }
 
   // Write values to an output stream
-  virtual bool write(std::ostream& os) const
-  {
-    return os.good();
-  }
-    
+  virtual bool write(std::ostream & os) const { return os.good(); }
+
 protected:
-    
   using g2o::BaseUnaryEdge<D, E, VertexXi>::_error;
   using g2o::BaseUnaryEdge<D, E, VertexXi>::_vertices;
-  
-  const STEBConfig* steb_cfg_; 
-  
+
+  const STEBConfig * steb_cfg_;
+
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW   
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
-
-
-// BaseTebBinaryEdge: Base edge connecting two vertices in the STEB optimization problem  
+// BaseTebBinaryEdge: Base edge connecting two vertices in the STEB optimization problem
 template <int D, typename E, typename VertexXi, typename VertexXj>
 class BaseTebBinaryEdge : public g2o::BaseBinaryEdge<D, E, VertexXi, VertexXj>
 {
 public:
-    
   using typename g2o::BaseBinaryEdge<D, E, VertexXi, VertexXj>::ErrorVector;
   using g2o::BaseBinaryEdge<D, E, VertexXi, VertexXj>::computeError;
 
-  // Compute and return error / cost value.   
-  ErrorVector& getError()
+  // Compute and return error / cost value.
+  ErrorVector & getError()
   {
     computeError();
     return _error;
   }
 
   // Assign the STEBConfig class for parameters.
-  void setSTEBConfig(const STEBConfig& steb_cfg)
-  {
-    steb_cfg_ = &steb_cfg;
-  }
+  void setSTEBConfig(const STEBConfig & steb_cfg) { steb_cfg_ = &steb_cfg; }
 
   // Read values from input stream
-  virtual bool read(std::istream& is)
+  virtual bool read(std::istream & is)
   {
     UNUSED(is);
     return true;
   }
 
   // Write values to an output stream
-  virtual bool write(std::ostream& os) const
-  {
-    return os.good();
-  }
-  
+  virtual bool write(std::ostream & os) const { return os.good(); }
+
 protected:
-  
   using g2o::BaseBinaryEdge<D, E, VertexXi, VertexXj>::_error;
   using g2o::BaseBinaryEdge<D, E, VertexXi, VertexXj>::_vertices;
-    
-  const STEBConfig* steb_cfg_;
-  
+
+  const STEBConfig * steb_cfg_;
+
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW   
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
-
-
 
 // BaseTebMultiEdge: Base edge connecting multiple vertices in the STEB optimization problem
 template <int D, typename E>
 class BaseTebMultiEdge : public g2o::BaseMultiEdge<D, E>
 {
 public:
-  
   using typename g2o::BaseMultiEdge<D, E>::ErrorVector;
   using g2o::BaseMultiEdge<D, E>::computeError;
-    
+
   // Overwrites resize() from the parent class
   virtual void resize(size_t size)
   {
-      g2o::BaseMultiEdge<D, E>::resize(size);
-      
-      for(std::size_t i=0; i<_vertices.size(); ++i)
-        _vertices[i] = NULL;
+    g2o::BaseMultiEdge<D, E>::resize(size);
+
+    for (std::size_t i = 0; i < _vertices.size(); ++i) _vertices[i] = NULL;
   }
 
-  // Compute and return error / cost value.  
-  ErrorVector& getError()
+  // Compute and return error / cost value.
+  ErrorVector & getError()
   {
     computeError();
     return _error;
   }
 
   // Assign the STEBConfig class for parameters.
-  void setSTEBConfig(const STEBConfig& steb_cfg)
-  {
-    steb_cfg_ = &steb_cfg;
-  }
+  void setSTEBConfig(const STEBConfig & steb_cfg) { steb_cfg_ = &steb_cfg; }
 
   // Read values from input stream
-  virtual bool read(std::istream& is)
+  virtual bool read(std::istream & is)
   {
     UNUSED(is);
     return true;
   }
 
   // Write values to an output stream
-  virtual bool write(std::ostream& os) const
-  {
-    return os.good();
-  }
-  
+  virtual bool write(std::ostream & os) const { return os.good(); }
+
 protected:
-    
   using g2o::BaseMultiEdge<D, E>::_error;
   using g2o::BaseMultiEdge<D, E>::_vertices;
-  
-  const STEBConfig* steb_cfg_; //!< Store TebConfig class for parameters
-  
+
+  const STEBConfig * steb_cfg_;  //!< Store TebConfig class for parameters
+
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW   
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
-} // namespace steb_planner
+}  // namespace steb_planner
 
 #endif

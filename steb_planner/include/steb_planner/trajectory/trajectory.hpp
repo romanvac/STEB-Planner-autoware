@@ -161,12 +161,12 @@ boost::optional<size_t> searchZeroVelocityIndex(const T & points_with_twist)
 template <class T>
 size_t findNearestIndex(const T & points, const geometry_msgs::msg::Point & point)
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   double min_dist = std::numeric_limits<double>::max();
   size_t min_idx = 0;
@@ -514,24 +514,24 @@ double calcSignedArcLength(
  */
 template <class T>
 double calcSignedArcLength(
-        const T & points, const geometry_msgs::msg::Point & src_point,
-        const geometry_msgs::msg::Point & dst_point)
-    {
-        try {
-            validateNonEmpty(points);
-        } catch (const std::exception & e) {
-            std::cerr << e.what() << std::endl;
-            return 0.0;
-        }
-        const size_t src_seg_idx = findNearestSegmentIndex(points, src_point);
-        const size_t dst_seg_idx = findNearestSegmentIndex(points, dst_point);
-        const double signed_length_on_traj = calcSignedArcLength(points, src_seg_idx, dst_seg_idx);
-        const double signed_length_src_offset =
-                calcLongitudinalOffsetToSegment(points, src_seg_idx, src_point);
-        const double signed_length_dst_offset =
-                calcLongitudinalOffsetToSegment(points, dst_seg_idx, dst_point);
-        return signed_length_on_traj - signed_length_src_offset + signed_length_dst_offset;
-    }
+  const T & points, const geometry_msgs::msg::Point & src_point,
+  const geometry_msgs::msg::Point & dst_point)
+{
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return 0.0;
+  }
+  const size_t src_seg_idx = findNearestSegmentIndex(points, src_point);
+  const size_t dst_seg_idx = findNearestSegmentIndex(points, dst_point);
+  const double signed_length_on_traj = calcSignedArcLength(points, src_seg_idx, dst_seg_idx);
+  const double signed_length_src_offset =
+    calcLongitudinalOffsetToSegment(points, src_seg_idx, src_point);
+  const double signed_length_dst_offset =
+    calcLongitudinalOffsetToSegment(points, dst_seg_idx, dst_point);
+  return signed_length_on_traj - signed_length_src_offset + signed_length_dst_offset;
+}
 
 /**
  * @brief calcSignedArcLength from pose to point
@@ -945,12 +945,12 @@ inline boost::optional<size_t> insertTargetPoint(
   const double insert_point_length, const geometry_msgs::msg::Point & p_target, T & points,
   const double overlap_threshold = 1e-3)
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   if (insert_point_length < 0.0) {
     return boost::none;
@@ -985,12 +985,12 @@ inline boost::optional<size_t> insertTargetPoint(
   const size_t src_segment_idx, const double insert_point_length, T & points,
   const double overlap_threshold = 1e-3)
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   if (insert_point_length < 0.0 || src_segment_idx >= points.size() - 1) {
     return boost::none;
@@ -1035,12 +1035,12 @@ inline boost::optional<size_t> insertTargetPoint(
   const double max_dist = std::numeric_limits<double>::max(),
   const double max_yaw = std::numeric_limits<double>::max(), const double overlap_threshold = 1e-3)
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   if (insert_point_length < 0.0) {
     return boost::none;
@@ -1070,12 +1070,12 @@ inline boost::optional<size_t> insertStopPoint(
   const size_t src_segment_idx, const double distance_to_stop_point, T & points_with_twist,
   const double overlap_threshold = 1e-3)
 {
-    try {
-        validateNonEmpty(points_with_twist);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points_with_twist);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   if (distance_to_stop_point < 0.0 || src_segment_idx >= points_with_twist.size() - 1) {
     return boost::none;
@@ -1107,12 +1107,12 @@ inline boost::optional<size_t> insertStopPoint(
   T & points_with_twist, const double max_dist = std::numeric_limits<double>::max(),
   const double max_yaw = std::numeric_limits<double>::max(), const double overlap_threshold = 1e-3)
 {
-    try {
-        validateNonEmpty(points_with_twist);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points_with_twist);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   if (distance_to_stop_point < 0.0) {
     return boost::none;
@@ -1169,12 +1169,12 @@ double calcSignedArcLength(
   const T & points, const geometry_msgs::msg::Point & src_point, const size_t src_seg_idx,
   const geometry_msgs::msg::Point & dst_point, const size_t dst_seg_idx)
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   const double signed_length_on_traj = calcSignedArcLength(points, src_seg_idx, dst_seg_idx);
   const double signed_length_src_offset =
@@ -1190,12 +1190,12 @@ double calcSignedArcLength(
   const T & points, const geometry_msgs::msg::Point & src_point, const size_t src_seg_idx,
   const size_t dst_idx)
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   const double signed_length_on_traj = calcSignedArcLength(points, src_seg_idx, dst_idx);
   const double signed_length_src_offset =
@@ -1209,12 +1209,12 @@ double calcSignedArcLength(
   const T & points, const size_t src_idx, const geometry_msgs::msg::Point & dst_point,
   const size_t dst_seg_idx)
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   const double signed_length_on_traj = calcSignedArcLength(points, src_idx, dst_seg_idx);
   const double signed_length_dst_offset =
@@ -1229,12 +1229,12 @@ size_t findFirstNearestIndexWithSoftConstraints(
   const double dist_threshold = std::numeric_limits<double>::max(),
   const double yaw_threshold = std::numeric_limits<double>::max())
 {
-    try {
-        validateNonEmpty(points);
-    } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
-        return {};
-    }
+  try {
+    validateNonEmpty(points);
+  } catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return {};
+  }
 
   {  // with dist and yaw thresholds
     const double squared_dist_threshold = dist_threshold * dist_threshold;
@@ -1332,6 +1332,6 @@ size_t findFirstNearestSegmentIndexWithSoftConstraints(
 
   return nearest_idx;
 }
-}  // namespace steb_planner
+}  // namespace motion_utils
 
 #endif  // MOTION_UTILS__TRAJECTORY__TRAJECTORY_HPP_

@@ -1,53 +1,50 @@
 /*********************************************************************
-*
-* Software License Agreement (MIT License)
-*
-* Copyright (c) 2024, HeShan.
-* All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-* Author: HeShan
-*********************************************************************/
-
+ *
+ * Software License Agreement (MIT License)
+ *
+ * Copyright (c) 2024, HeShan.
+ * All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Author: HeShan
+ *********************************************************************/
 
 #ifndef EDGE_ACCELERATION_H_
 #define EDGE_ACCELERATION_H_
 
 #include <geometry_msgs/msg/twist.hpp>
 
-#include <steb_planner/g2o_types/vertex_st.h>
-#include <steb_planner/g2o_types/penalties.h>
 #include <steb_planner/g2o_types/base_teb_edges.h>
-
+#include <steb_planner/g2o_types/penalties.h>
+#include <steb_planner/g2o_types/vertex_st.h>
 #include <steb_planner/steb_optimal/steb_config.h>
-
 
 namespace steb_planner
 {
 
-// EdgeAcceleration: Edge defining the cost function for limiting the translational and rotational acceleration.
+// EdgeAcceleration: Edge defining the cost function for limiting the translational and rotational
+// acceleration.
 class EdgeAcceleration : public BaseTebMultiEdge<4, double>
 {
 public:
-
   EdgeAcceleration()
   {
     this->setMeasurement(0.);
@@ -57,19 +54,18 @@ public:
   void computeError() override
   {
     STEB_ASSERT_MSG(steb_cfg_, "You must call setTebConfig on EdgeAcceleration()");
-    const auto* pose1 = dynamic_cast<const VertexST*>(_vertices[0]);
-    const auto* pose2 = dynamic_cast<const VertexST*>(_vertices[1]);
-    const auto* pose3 = dynamic_cast<const VertexST*>(_vertices[2]);
-    const auto* pose4 = dynamic_cast<const VertexST*>(_vertices[3]);
+    const auto * pose1 = dynamic_cast<const VertexST *>(_vertices[0]);
+    const auto * pose2 = dynamic_cast<const VertexST *>(_vertices[1]);
+    const auto * pose3 = dynamic_cast<const VertexST *>(_vertices[2]);
+    const auto * pose4 = dynamic_cast<const VertexST *>(_vertices[3]);
 
     // VELOCITY & ACCELERATION
-    const Eigen::Vector2d diff1 = {pose2->estimate().x() - pose1->estimate().x(),
-                                   pose2->estimate().y() - pose1->estimate().y()};
-    const Eigen::Vector2d diff2 = {pose3->estimate().x() - pose2->estimate().x(),
-                                   pose3->estimate().y() - pose2->estimate().y()};
-    const Eigen::Vector2d diff3 = {pose4->estimate().x() - pose3->estimate().x(),
-                                   pose4->estimate().y() - pose3->estimate().y()};
-
+    const Eigen::Vector2d diff1 = {
+      pose2->estimate().x() - pose1->estimate().x(), pose2->estimate().y() - pose1->estimate().y()};
+    const Eigen::Vector2d diff2 = {
+      pose3->estimate().x() - pose2->estimate().x(), pose3->estimate().y() - pose2->estimate().y()};
+    const Eigen::Vector2d diff3 = {
+      pose4->estimate().x() - pose3->estimate().x(), pose4->estimate().y() - pose3->estimate().y()};
 
     double dist1 = diff1.norm();
     double dist2 = diff2.norm();
@@ -98,63 +94,64 @@ public:
     double accel1 = (velocity2 - velocity1) * 2.0 / (t1 + t2);
     double accel2 = (velocity3 - velocity2) * 2.0 / (t2 + t3);
 
-    double angle_accel1 = std::fabs( (angle_velocity2 -angle_velocity1) * 2.0 / (t1 + t2) );
+    double angle_accel1 = std::fabs((angle_velocity2 - angle_velocity1) * 2.0 / (t1 + t2));
 
     // jerk
-    double jerk1 = std::fabs( accel2 - accel1 );
+    double jerk1 = std::fabs(accel2 - accel1);
     // std::fabs(accel2 - accel1);
     // std::fabs(accel2 - accel1) * 3 / (t1 + t2 + t3);
 
+    //    if (steb_cfg_->trajectory.exact_arc_length) // use exact arc length instead of Euclidean
+    //    approximation
+    //    {
+    //      if (angle_diff1 != 0)
+    //      {
+    //        const double radius =  dist1/(2*sin(angle_diff1/2));
+    //        dist1 = fabs( angle_diff1 * radius ); // actual arg length!
+    //      }
+    //      if (angle_diff2 != 0)
+    //      {
+    //        const double radius =  dist2/(2*sin(angle_diff2/2));
+    //        dist2 = fabs( angle_diff2 * radius ); // actual arg length!
+    //      }
+    //    }
+    //
+    //    double vel1 = dist1 / dt1->dt();
+    //    double vel2 = dist2 / dt2->dt();
+    //
+    //
+    //    // consider directions
+    //    //     vel1 *= g2o::sign(diff1[0]*cos(pose1->theta()) + diff1[1]*sin(pose1->theta()));
+    //    //     vel2 *= g2o::sign(diff2[0]*cos(pose2->theta()) + diff2[1]*sin(pose2->theta()));
+    //    vel1 *= fast_sigmoid( 100*(diff1.x()*cos(pose1->theta()) + diff1.y()*sin(pose1->theta()))
+    //    ); vel2 *= fast_sigmoid( 100*(diff2.x()*cos(pose2->theta()) +
+    //    diff2.y()*sin(pose2->theta())) );
+    //
+    //    const double acc_lin  = (vel2 - vel1)*2 / ( dt1->dt() + dt2->dt() );
 
-
-//    if (steb_cfg_->trajectory.exact_arc_length) // use exact arc length instead of Euclidean approximation
-//    {
-//      if (angle_diff1 != 0)
-//      {
-//        const double radius =  dist1/(2*sin(angle_diff1/2));
-//        dist1 = fabs( angle_diff1 * radius ); // actual arg length!
-//      }
-//      if (angle_diff2 != 0)
-//      {
-//        const double radius =  dist2/(2*sin(angle_diff2/2));
-//        dist2 = fabs( angle_diff2 * radius ); // actual arg length!
-//      }
-//    }
-//
-//    double vel1 = dist1 / dt1->dt();
-//    double vel2 = dist2 / dt2->dt();
-//
-//
-//    // consider directions
-//    //     vel1 *= g2o::sign(diff1[0]*cos(pose1->theta()) + diff1[1]*sin(pose1->theta()));
-//    //     vel2 *= g2o::sign(diff2[0]*cos(pose2->theta()) + diff2[1]*sin(pose2->theta()));
-//    vel1 *= fast_sigmoid( 100*(diff1.x()*cos(pose1->theta()) + diff1.y()*sin(pose1->theta())) );
-//    vel2 *= fast_sigmoid( 100*(diff2.x()*cos(pose2->theta()) + diff2.y()*sin(pose2->theta())) );
-//
-//    const double acc_lin  = (vel2 - vel1)*2 / ( dt1->dt() + dt2->dt() );
-
-
-
-
-    _error[0] = penaltyBoundToInterval((accel1 + accel2 ) / 2.0, steb_cfg_->vehicle_param.max_longitudinal_acc, steb_cfg_->optim.penalty_epsilon);
+    _error[0] = penaltyBoundToInterval(
+      (accel1 + accel2) / 2.0, steb_cfg_->vehicle_param.max_longitudinal_acc,
+      steb_cfg_->optim.penalty_epsilon);
 
     // ANGULAR ACCELERATION
-//    const double omega1 = angle_diff1 / dt1->dt();
-//    const double omega2 = angle_diff2 / dt2->dt();
-//    const double acc_rot  = (omega2 - omega1)*2 / ( dt1->dt() + dt2->dt() );
+    //    const double omega1 = angle_diff1 / dt1->dt();
+    //    const double omega2 = angle_diff2 / dt2->dt();
+    //    const double acc_rot  = (omega2 - omega1)*2 / ( dt1->dt() + dt2->dt() );
 
-    _error[1] = penaltyBoundToInterval(angle_accel1, steb_cfg_->vehicle_param.max_theta_acc, steb_cfg_->optim.penalty_epsilon);
+    _error[1] = penaltyBoundToInterval(
+      angle_accel1, steb_cfg_->vehicle_param.max_theta_acc, steb_cfg_->optim.penalty_epsilon);
 
     _error[2] = jerk1;
 
     _error[3] = std::fabs(angle_accel1);
 
-
-    STEB_ASSERT_MSG(std::isfinite(_error[0]), "EdgeAcceleration::computeError() translational: _error[0]=%f\n",_error[0]);
-    STEB_ASSERT_MSG(std::isfinite(_error[1]), "EdgeAcceleration::computeError() rotational: _error[1]=%f\n",_error[1]);
+    STEB_ASSERT_MSG(
+      std::isfinite(_error[0]), "EdgeAcceleration::computeError() translational: _error[0]=%f\n",
+      _error[0]);
+    STEB_ASSERT_MSG(
+      std::isfinite(_error[1]), "EdgeAcceleration::computeError() rotational: _error[1]=%f\n",
+      _error[1]);
   }
-
-
 
 #ifdef USE_ANALYTIC_JACOBI
 #if 0
@@ -267,14 +264,10 @@ public:
 #endif
 #endif
 
-
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 };
 
-
-    
-} // end namespace
+}  // namespace steb_planner
 
 #endif /* EDGE_ACCELERATION_H_ */
