@@ -275,6 +275,15 @@ public:
     PolygonPoints polygon_points;
     polygon_points.points_in_image = points_in_image;
     polygon_points.points_in_map = points_in_map;
+
+    RCLCPP_INFO(
+      rclcpp::get_logger("steb_planner"),
+      "[BB] object pose: (%.2f, %.2f), map origin: (%.2f, %.2f), "
+      "map size: %dx%d res=%.3f, points_in_image=%zu",
+      object_pose.position.x, object_pose.position.y, map_info.origin.position.x,
+      map_info.origin.position.y, map_info.width, map_info.height, map_info.resolution,
+      points_in_image.size());
+
     return polygon_points;
   }
 
@@ -409,14 +418,17 @@ public:
     const cv::Mat & clearance_map, const nav_msgs::msg::MapMetaData & map_info,
     const std::vector<autoware_auto_planning_msgs::msg::PathPoint> & path_points)
   {
+    RCLCPP_INFO(rclcpp::get_logger("steb_planner"), "[avoid] 1");
     if (path_points.empty()) {
       return false;
     }
+    RCLCPP_INFO(rclcpp::get_logger("steb_planner"), "[avoid] 2");
     if (!isAvoidingObjectType(object)) {
       return false;
     }
     const auto image_point = transformMapToOptionalImage(
       object.kinematics.initial_pose_with_covariance.pose.position, map_info);
+    RCLCPP_INFO(rclcpp::get_logger("steb_planner"), "[avoid] 3");
     if (!image_point) {
       return false;
     }
@@ -425,6 +437,14 @@ public:
     const geometry_msgs::msg::Vector3 twist =
       object.kinematics.initial_twist_with_covariance.twist.linear;
     const double vel = std::sqrt(twist.x * twist.x + twist.y * twist.y + twist.z * twist.z);
+
+    RCLCPP_INFO(
+      rclcpp::get_logger("steb_planner"), "[avoid] vel=%.3f max_static=%.3f label=%d", vel,
+      steb_config_->obstacles.max_static_obstacle_velocity,
+      (int)object.classification.front().label);
+
+    bool inside = arePointsInsideDriveableArea(polygon_points.points_in_image, clearance_map);
+    RCLCPP_INFO(rclcpp::get_logger("steb_planner"), "[avoid] inside_driveable=%d", (int)inside);
 
     if (
       vel > steb_config_->obstacles.max_static_obstacle_velocity ||
@@ -473,20 +493,41 @@ public:
     const cv::Mat & clearance_map,
     std::vector<autoware_auto_perception_msgs::msg::PredictedObject> * debug_avoiding_objects)
   {
+    RCLCPP_INFO(
+      rclcpp::get_logger("steb_planner"), "[steb, drawObstaclesOnImage] path_ size: %zu",
+      path_points.size());
+
     steb_planner::TicToc stop_watch_;
     stop_watch_.tic();
 
     std::vector<autoware_auto_planning_msgs::msg::PathPoint> path_points_inside_area;
+    int fail_transform = 0, fail_clearance = 0;
     for (const auto & point : path_points) {
       std::vector<geometry_msgs::msg::Point> points;
       geometry_msgs::msg::Point image_point;
-      if (!transformMapToImage(point.pose.position, map_info, image_point)) continue;
+      if (!transformMapToImage(point.pose.position, map_info, image_point)) {
+        fail_transform++;
+        continue;
+      }
 
       const float clearance =
         clearance_map.ptr<float>(static_cast<int>(image_point.y))[static_cast<int>(image_point.x)];
-      if (clearance < 1e-5) continue;
+      if (clearance < 1e-5) {
+        fail_clearance++;
+        continue;
+      }
       path_points_inside_area.push_back(point);
     }
+
+    RCLCPP_INFO(
+      rclcpp::get_logger("steb_planner"),
+      "[path filter] fail_transform=%d fail_clearance=%d ok=%zu", fail_transform, fail_clearance,
+      path_points_inside_area.size());
+
+    RCLCPP_INFO(
+      rclcpp::get_logger("steb_planner"),
+      "[steb, drawObstaclesOnImage] path_points_inside_area size: %zu",
+      path_points_inside_area.size());
 
     // NOTE: objects image is too sparse so that creating cost map is heavy.
     //       Then, objects image is created by filling dilated drivable area,

@@ -54,10 +54,10 @@ steb_planner_node:
 
       # ── Obstacles ──────────────────────────────────────────────────────
       Obstacles:
-        min_obstacle_dist:                          4.0
+        min_obstacle_dist:                          2.0
         inflation_dist:                             3.5
         dynamic_obstacle_inflation_dist:            4.0
-        include_dynamic_obstacles:                  false
+        include_dynamic_obstacles:                  true
         obstacle_poses_affected:                    25
         obstacle_association_force_inclusion_factor: 1.5
 

@@ -219,17 +219,29 @@ bool STEBPlanner::plan(
   //            << occupancy_grid_ptr_->info.origin.position.y << ", "
   //            << tf2::getYaw(occupancy_grid_ptr_->info.origin.orientation) << std::endl;
 
-  // autoware_auto_perception_msgs::msg::PredictedObjects objects_in_ego = objects_;
-  // for (auto & object : objects_in_ego.objects) {
-  //   tf2::Transform tf_obj_pose;
-  //   tf2::fromMsg(object.kinematics.initial_pose_with_covariance.pose, tf_obj_pose);
-  //   // map_to_geo = base_link→map, поэтому inverse() = map→base_link
-  //   tf2::Transform tf_obj_in_ego = map_to_geo.inverse() * tf_obj_pose;
-  //   tf2::toMsg(tf_obj_in_ego, object.kinematics.initial_pose_with_covariance.pose);
-  // }
+  autoware_auto_perception_msgs::msg::PredictedObjects objects_in_grid_frame = objects_;
+  for (auto & object : objects_in_grid_frame.objects) {
+    tf2::Transform tf_obj_pose;
+    tf2::fromMsg(object.kinematics.initial_pose_with_covariance.pose, tf_obj_pose);
+    // трансформируем из map в base_link (фрейм карты)
+    tf2::Transform tf_obj_local = map_to_geo.inverse() * tf_obj_pose;
+    tf2::toMsg(tf_obj_local, object.kinematics.initial_pose_with_covariance.pose);
+  }
+
+  autoware_auto_planning_msgs::msg::Path path_in_grid_frame = path_;
+  path_in_grid_frame.points.clear();
+  path_in_grid_frame.points.reserve(path_.points.size());
+  for (const auto & pt : path_.points) {
+    tf2::Transform tf_pt;
+    tf2::fromMsg(pt.pose, tf_pt);
+    tf2::Transform tf_pt_local = map_to_geo.inverse() * tf_pt;
+    autoware_auto_planning_msgs::msg::PathPoint local_pt = pt;
+    tf2::toMsg(tf_pt_local, local_pt.pose);
+    path_in_grid_frame.points.push_back(local_pt);
+  }
 
   steb_planner::CollisionFreeCorridor collision_free_corridor(
-    steb_cfg_, occupancy_grid_ptr_, objects_, path_);
+    steb_cfg_, occupancy_grid_ptr_, objects_in_grid_frame, path_in_grid_frame);
   CVMaps_ = collision_free_corridor.getCVMaps();
   //  }
 
