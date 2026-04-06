@@ -3,13 +3,13 @@
   <!-- ─── topic args ─────────────────────────────────────────────────── -->
   <arg name="input_path"         default="/planning/scenario_planning/lane_driving/behavior_planning/path"/>
   <arg name="input_objects"      default="/perception/object_recognition/objects"/>
-  <arg name="output_trajectory"  default="/planning/scenario_planning/trajectory"/>
+  <arg name="output_trajectory"  default="/planning/scenario_planning/trajectory1"/>
 
   <arg name="use_sim_time"       default="true"/>
   <arg name="config_file"        default="$(find-pkg-share steb_planner)/config/steb_planner.param.yaml"/>
 
   <!-- ─── node ──────────────────────────────────────────────────────── -->
-  <node pkg="steb_planner" exec="steb_planner_node" name="steb_planner_node" output="screen">
+  <node pkg="steb_planner" exec="steb_planner_node" name="steb_planner_node" output="screen" respawn="true">
 
     <param name="use_sim_time" value="$(var use_sim_time)"/>
     <param from="$(var config_file)"/>

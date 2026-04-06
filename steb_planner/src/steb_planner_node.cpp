@@ -485,7 +485,7 @@ void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr 
   cv_bridge::CvImage cvi;
   cvi.header = costmap_image.header;
   // clearance map using 32FC1; drivable map using mono8
-//    cvi.encoding = "mono8";
+  // cvi.encoding = "mono8";
   cvi.encoding = "32FC1";
   cvi.image = costmap_image_cv;
   cvi.toImageMsg(costmap_image);
@@ -497,7 +497,7 @@ void STEBPlannerNode::onPath(const autoware_planning_msgs::msg::Path::SharedPtr 
   cv_bridge::CvImage cvi_origin;
   cvi_origin.header = costmap_image.header;
   // clearance map using 32FC1; drivable map using mono8
-  cvi.encoding = "mono8";
+  cvi_origin.encoding = "mono8";
   // cvi_origin.encoding = "32FC1";
   cvi_origin.image = costmap_origin_image_cv;
   cvi_origin.toImageMsg(costmap_image_origin);

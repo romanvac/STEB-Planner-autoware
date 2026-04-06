@@ -76,7 +76,7 @@ struct VehicleParam {
 
  struct Trajectory
  {
-   double steb_autosize = true;         // Enable automatic resizing of the trajectory
+   bool steb_autosize = true;         // Enable automatic resizing of the trajectory
    bool steb_autosize_fast_mode = true; 
    double auto_resize_resolution = 1.4; // Desired spatio-temporal resolution of the trajectory
    double auto_resize_resolution_hysteresis = 0.6; // Hysteresis for automatic resizing depending on the current spatio-temporal resolution: usually 10% of dt_ref
@@ -115,7 +115,7 @@ struct VehicleParam {
   bool is_avoiding_pedestrian = true;
   bool is_avoiding_animal = false;
 
-  double soft_clearance_from_road = 0.0;
+  double soft_clearance_from_road = 0.3;
   double extra_desired_clearance_from_road = 0.0;
   double soft_clearance_from_object = 1.0;
   double extra_desired_clearance_from_object = 0.0;

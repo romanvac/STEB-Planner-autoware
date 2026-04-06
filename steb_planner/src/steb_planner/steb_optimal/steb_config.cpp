@@ -114,12 +114,29 @@ void STEBConfig::declareParameters(rclcpp::Node* nh) {
 
   declare_parameter_if_not_declared(nh, node_name + ".Optimization." + "divergence_detection_enable", rclcpp::ParameterValue(optim.divergence_detection_enable));
   declare_parameter_if_not_declared(nh, node_name + ".Optimization." + "divergence_detection_max_chi_squared", rclcpp::ParameterValue(optim.divergence_detection_max_chi_squared));
+
+  // CollisionFreeCorridor
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_unknown",    rclcpp::ParameterValue(collision_free_corridor.is_avoiding_unknown));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_car",        rclcpp::ParameterValue(collision_free_corridor.is_avoiding_car));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_truck",      rclcpp::ParameterValue(collision_free_corridor.is_avoiding_truck));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_bus",        rclcpp::ParameterValue(collision_free_corridor.is_avoiding_bus));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_bicycle",    rclcpp::ParameterValue(collision_free_corridor.is_avoiding_bicycle));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_motorbike",  rclcpp::ParameterValue(collision_free_corridor.is_avoiding_motorbike));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_pedestrian", rclcpp::ParameterValue(collision_free_corridor.is_avoiding_pedestrian));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "is_avoiding_animal",     rclcpp::ParameterValue(collision_free_corridor.is_avoiding_animal));
+
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "soft_clearance_from_road",           rclcpp::ParameterValue(collision_free_corridor.soft_clearance_from_road));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "extra_desired_clearance_from_road",  rclcpp::ParameterValue(collision_free_corridor.extra_desired_clearance_from_road));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "soft_clearance_from_object",         rclcpp::ParameterValue(collision_free_corridor.soft_clearance_from_object));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "extra_desired_clearance_from_object",rclcpp::ParameterValue(collision_free_corridor.extra_desired_clearance_from_object));
+  declare_parameter_if_not_declared(nh, node_name + ".CollisionFreeCorridor." + "max_bound_search_width",             rclcpp::ParameterValue(collision_free_corridor.max_bound_search_width));
+
 }
 
 void STEBConfig::loadRosParamFromNodeHandle(rclcpp::Node* nh)
 {
   // Trajectory
-  nh->get_parameter_or(node_name + ".Trajectory." + "teb_autosize", trajectory.steb_autosize, trajectory.steb_autosize);
+  nh->get_parameter_or(node_name + ".Trajectory." + "steb_autosize", trajectory.steb_autosize, trajectory.steb_autosize);
   nh->get_parameter_or(node_name + ".Trajectory." + "auto_resize_resolution", trajectory.auto_resize_resolution, trajectory.auto_resize_resolution);
   nh->get_parameter_or(node_name + ".Trajectory." + "auto_resize_resolution_hysteresis", trajectory.auto_resize_resolution_hysteresis, trajectory.auto_resize_resolution_hysteresis);
   nh->get_parameter_or(node_name + ".Trajectory." + "min_samples", trajectory.min_samples, trajectory.min_samples);
@@ -194,6 +211,23 @@ void STEBConfig::loadRosParamFromNodeHandle(rclcpp::Node* nh)
 
   nh->get_parameter_or(node_name + ".Optimization." + "divergence_detection_enable", optim.divergence_detection_enable, optim.divergence_detection_enable);
   nh->get_parameter_or(node_name + ".Optimization." + "divergence_detection_max_chi_squared", optim.divergence_detection_max_chi_squared, optim.divergence_detection_max_chi_squared);
+
+  // CollisionFreeCorridor
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_unknown",    collision_free_corridor.is_avoiding_unknown,    collision_free_corridor.is_avoiding_unknown);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_car",        collision_free_corridor.is_avoiding_car,        collision_free_corridor.is_avoiding_car);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_truck",      collision_free_corridor.is_avoiding_truck,      collision_free_corridor.is_avoiding_truck);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_bus",        collision_free_corridor.is_avoiding_bus,        collision_free_corridor.is_avoiding_bus);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_bicycle",    collision_free_corridor.is_avoiding_bicycle,    collision_free_corridor.is_avoiding_bicycle);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_motorbike",  collision_free_corridor.is_avoiding_motorbike,  collision_free_corridor.is_avoiding_motorbike);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_pedestrian", collision_free_corridor.is_avoiding_pedestrian, collision_free_corridor.is_avoiding_pedestrian);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "is_avoiding_animal",     collision_free_corridor.is_avoiding_animal,     collision_free_corridor.is_avoiding_animal);
+
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "soft_clearance_from_road",            collision_free_corridor.soft_clearance_from_road,            collision_free_corridor.soft_clearance_from_road);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "extra_desired_clearance_from_road",   collision_free_corridor.extra_desired_clearance_from_road,   collision_free_corridor.extra_desired_clearance_from_road);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "soft_clearance_from_object",          collision_free_corridor.soft_clearance_from_object,          collision_free_corridor.soft_clearance_from_object);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "extra_desired_clearance_from_object", collision_free_corridor.extra_desired_clearance_from_object, collision_free_corridor.extra_desired_clearance_from_object);
+  nh->get_parameter_or(node_name + ".CollisionFreeCorridor." + "max_bound_search_width",              collision_free_corridor.max_bound_search_width,              collision_free_corridor.max_bound_search_width);
+
 
   checkParameters();
   checkDeprecated(nh);

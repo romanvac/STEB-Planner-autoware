@@ -500,6 +500,15 @@ public:
     for (const auto & object : objects.objects)
     {
       const PolygonPoints polygon_points = getPolygonPoints(object, map_info);
+      bool avoiding = isAvoidingObject(polygon_points, object, clearance_map, 
+                                     map_info, path_points_inside_area);
+      RCLCPP_INFO(rclcpp::get_logger("steb_planner"),
+        "Object label=%d vel=%.2f avoiding=%d poly_pts=%zu",
+        object.classification.at(0).label,
+        object.kinematics.initial_twist_with_covariance.twist.linear.x,
+        (int)avoiding,
+        polygon_points.points_in_image.size());
+
       if (isAvoidingObject(polygon_points, object, clearance_map, map_info,
                            path_points_inside_area))
       {
@@ -609,11 +618,11 @@ public:
   {
     cv::Mat clearance_map;
 
-//    steb_planner::TicToc tic_toc;
-//    tic_toc.tic();
+    // steb_planner::TicToc tic_toc;
+    // tic_toc.tic();
     cv::distanceTransform(drivable_area, clearance_map, cv::DIST_L2, 5);
-//    auto time = tic_toc.toc();
-//    std::cout << "*********** clearance map convert time cost: " << time << " ms, "<< std::endl;
+    // auto time = tic_toc.toc();
+    // std::cout << "*********** clearance map convert time cost: " << time << " ms, "<< std::endl;
 
     return clearance_map;
   }
@@ -628,15 +637,15 @@ public:
     }
     const float clearance =
         clearance_map.ptr<float>(static_cast<int>(image_point.get().y))[static_cast<int>(image_point.get().x)] * map_info.resolution;
-//    std::cout << "get clearance: " << clearance_map.ptr<float>(static_cast<int>(image_point.get().y))[static_cast<int>(image_point.get().x)]
-//              <<",  map_info.resolution" <<map_info.resolution<< ", "<< clearance<< std::endl;
+    // std::cout << "get clearance: " << clearance_map.ptr<float>(static_cast<int>(image_point.get().y))[static_cast<int>(image_point.get().x)]
+    //           <<",  map_info.resolution" <<map_info.resolution<< ", "<< clearance<< std::endl;
 
-//    cv_maps_.debug_map.ptr<float>(static_cast<int>(image_point.get().y))[static_cast<int>(image_point.get().x)] = 200;
+    // cv_maps_.debug_map.ptr<float>(static_cast<int>(image_point.get().y))[static_cast<int>(image_point.get().x)] = 200;
 
-//    clearance_map.at<int>(static_cast<int>(image_point.get().y), static_cast<int>(image_point.get().x)) = 200;
-//    clearance_map.at<int>(static_cast<int>(image_point.get().y), static_cast<int>(image_point.get().x+1)) = 200;
-//    clearance_map.at<int>(static_cast<int>(image_point.get().y+1), static_cast<int>(image_point.get().x)) = 200;
-//    clearance_map.at<int>(static_cast<int>(image_point.get().y+1), static_cast<int>(image_point.get().x+1)) = 200;
+    // clearance_map.at<int>(static_cast<int>(image_point.get().y), static_cast<int>(image_point.get().x)) = 200;
+    // clearance_map.at<int>(static_cast<int>(image_point.get().y), static_cast<int>(image_point.get().x+1)) = 200;
+    // clearance_map.at<int>(static_cast<int>(image_point.get().y+1), static_cast<int>(image_point.get().x)) = 200;
+    // clearance_map.at<int>(static_cast<int>(image_point.get().y+1), static_cast<int>(image_point.get().x+1)) = 200;
     return clearance;
   }
 
@@ -651,11 +660,21 @@ public:
     }
 
     // calculate clearance
+    // const double min_soft_road_clearance = steb_config_->collision_free_corridor.soft_clearance_from_road
+    //                                  + steb_config_->collision_free_corridor.extra_desired_clearance_from_road;
     const double min_soft_road_clearance = steb_config_->vehicle_param.circle_radius +
                                            steb_config_->collision_free_corridor.soft_clearance_from_road +
                                            steb_config_->collision_free_corridor.extra_desired_clearance_from_road;
-//      const double min_obj_clearance = vehicle_param_.width / 2.0 + param_.clearance_from_object +
-//                                       param_.soft_clearance_from_road;
+
+    RCLCPP_INFO_ONCE(rclcpp::get_logger("steb_planner"), 
+      "min_soft_road_clearance = %.3f (circle_radius=%.3f + soft=%.3f + extra=%.3f)",
+      min_soft_road_clearance,
+      steb_config_->vehicle_param.circle_radius,
+      steb_config_->collision_free_corridor.soft_clearance_from_road,
+      steb_config_->collision_free_corridor.extra_desired_clearance_from_road);
+    // sleep(100);
+    //      const double min_obj_clearance = vehicle_param_.width / 2.0 + param_.clearance_from_object +
+    //                                       param_.soft_clearance_from_road;
 
     // calculate target position
     geometry_msgs::msg::Point target_pos;
