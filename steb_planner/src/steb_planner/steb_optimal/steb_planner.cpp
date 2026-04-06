@@ -219,17 +219,17 @@ bool STEBPlanner::plan(
   //            << occupancy_grid_ptr_->info.origin.position.y << ", "
   //            << tf2::getYaw(occupancy_grid_ptr_->info.origin.orientation) << std::endl;
 
-  autoware_auto_perception_msgs::msg::PredictedObjects objects_in_ego = objects_;
-  for (auto & object : objects_in_ego.objects) {
-    tf2::Transform tf_obj_pose;
-    tf2::fromMsg(object.kinematics.initial_pose_with_covariance.pose, tf_obj_pose);
-    // map_to_geo = base_link→map, поэтому inverse() = map→base_link
-    tf2::Transform tf_obj_in_ego = map_to_geo.inverse() * tf_obj_pose;
-    tf2::toMsg(tf_obj_in_ego, object.kinematics.initial_pose_with_covariance.pose);
-  }
+  // autoware_auto_perception_msgs::msg::PredictedObjects objects_in_ego = objects_;
+  // for (auto & object : objects_in_ego.objects) {
+  //   tf2::Transform tf_obj_pose;
+  //   tf2::fromMsg(object.kinematics.initial_pose_with_covariance.pose, tf_obj_pose);
+  //   // map_to_geo = base_link→map, поэтому inverse() = map→base_link
+  //   tf2::Transform tf_obj_in_ego = map_to_geo.inverse() * tf_obj_pose;
+  //   tf2::toMsg(tf_obj_in_ego, object.kinematics.initial_pose_with_covariance.pose);
+  // }
 
   steb_planner::CollisionFreeCorridor collision_free_corridor(
-    steb_cfg_, occupancy_grid_ptr_, objects_in_ego, path_);
+    steb_cfg_, occupancy_grid_ptr_, objects_, path_);
   CVMaps_ = collision_free_corridor.getCVMaps();
   //  }
 
@@ -244,18 +244,16 @@ bool STEBPlanner::plan(
     auto bound = collision_free_corridor.calcBound(via_pose);
     if (!bound.empty()) {
       // Найти bounds, чья середина ближайшая к нулю (к самой via_point)
-      auto best = bound.begin();
-      for (auto it = bound.begin(); it != bound.end(); ++it) {
-        if (it->lower_bound <= 0.0 && it->upper_bound >= 0.0) {
-          best = it;
-          break;
-        }
+      auto best = std::find_if(bound.begin(), bound.end(), [](const Bounds & b) {
+        return b.lower_bound <= 0.0 && b.upper_bound >= 0.0;
+      });
+      if (best != bound.end()) {
+        new_via_area->setLeftBound(best->upper_bound);
+        new_via_area->setRightBound(best->lower_bound);
       }
-      // new_via_area->setLeftBound(best->upper_bound);
-      // new_via_area->setRightBound(best->lower_bound);
 
-      new_via_area->setLeftBound(bound.back().upper_bound);
-      new_via_area->setRightBound(bound.back().lower_bound);
+      // new_via_area->setLeftBound(bound.back().upper_bound);
+      // new_via_area->setRightBound(bound.back().lower_bound);
       // print
       for (int j = 0; j < static_cast<int>(bound.size()); ++j) {
         std::cout << "Bound i: " << i << "|" << j << " -( " << bound.at(j).upper_bound << ", "
